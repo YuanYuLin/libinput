@@ -1,0 +1,6 @@
+{
+"COMMON":
+[
+{"enabled":1, "name": "0000-src.evdev.c.patch"}
+]
+}

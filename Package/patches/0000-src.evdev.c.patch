@@ -1,0 +1,45 @@
+--- a/src/evdev.c	2017-06-26 17:25:16.000000000 +0800
++++ b/src/evdev.c	2018-05-14 05:23:52.001981360 +0800
+@@ -98,8 +98,25 @@
+ 		const char *property)
+ {
+ 	const char *val;
++	char *event_node;
+ 
++	val = udev_device_get_sysname(udev_device);
++	event_node = getenv("IOPC_INPUT_EVENT");
++	if( (strcmp(event_node, val) == 0) && (strcmp("ID_INPUT_KEYBOARD", property) == 0) ) {
++		return true;
++	}
++	if( (strcmp(event_node, val) == 0) && (strcmp("ID_INPUT_MOUSE", property) == 0) ) {
++		return true;
++	}
++	if( (strcmp(event_node, val) == 0) && (strcmp("ID_INPUT", property) == 0) ) {
++		return true;
++	}
++	if( (strcmp(event_node, val) == 0) && (strcmp("ID_INPUT_TOUCHSCREEN", property) == 0) ) {
++		return true;
++	}
++/*
+ 	val = udev_device_get_property_value(udev_device, property);
++	//printf("%s-%s-%d, flag:%s, %s\n", __FILE__, __func__, __LINE__, val, property);
+ 	if (!val)
+ 		return false;
+ 
+@@ -110,6 +127,7 @@
+ 				"property %s has invalid value '%s'\n",
+ 				property,
+ 				val);
++*/
+ 	return false;
+ }
+ 
+@@ -2578,7 +2596,7 @@
+ 	if ((udev_tags & EVDEV_UDEV_TAG_INPUT) == 0 ||
+ 	    (udev_tags & ~EVDEV_UDEV_TAG_INPUT) == 0) {
+ 		evdev_log_info(device,
+-			       "not tagged as supported input device\n");
++			       "not tagged as supported input device[%x]\n", udev_tags);
+ 		return NULL;
+ 	}
+ 
