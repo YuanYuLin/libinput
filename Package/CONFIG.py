@@ -137,7 +137,7 @@ def MAIN_BUILD(args):
 
     ops.mkdir(tmp_include_dir)
     ops.copyto(ops.path_join(install_tmp_dir, "usr/local/include/."), tmp_include_dir)
-    return False
+    return True
 
 def MAIN_INSTALL(args):
     set_global(args)
