@@ -52,23 +52,11 @@ def MAIN_ENV(args):
     ops.exportEnv(ops.setEnv("PKG_CONFIG_LIBDIR", ops.path_join(iopc.getSdkPath(), "pkgconfig")))
     ops.exportEnv(ops.setEnv("PKG_CONFIG_SYSROOT_DIR", iopc.getSdkPath()))
 
-    cc_sysroot = ops.getEnv("CC_SYSROOT")
-    cflags = ""
-    cflags += " -I" + ops.path_join(cc_sysroot, 'usr/include')
-    cflags += " -I" + ops.path_join(iopc.getSdkPath(), 'usr/include/libudev')
-    #cflags += " -I" + ops.path_join(iopc.getSdkPath(), 'usr/include/libexpat')
-
-    ldflags = ""
-    ldflags += " -L" + ops.path_join(cc_sysroot, 'lib')
-    ldflags += " -L" + ops.path_join(cc_sysroot, 'usr/lib')
-    ldflags += " -L" + ops.path_join(iopc.getSdkPath(), 'lib')
-
-    libs = ""
-    libs += " -lffi -lxml2 -lexpat"
+    '''
     ops.exportEnv(ops.setEnv("LDFLAGS", ldflags))
     ops.exportEnv(ops.setEnv("CFLAGS", cflags))
     ops.exportEnv(ops.setEnv("LIBS", libs))
-
+    '''
     return False
 
 def MAIN_EXTRACT(args):
@@ -92,6 +80,9 @@ def MAIN_PATCH(args, patch_group_name):
 def MAIN_CONFIGURE(args):
     set_global(args)
 
+    cflags = iopc.get_includes()
+    libs = iopc.get_libs()
+
     extra_conf = []
     extra_conf.append("--host=" + cc_host)
     extra_conf.append("--disable-documentation")
@@ -100,14 +91,14 @@ def MAIN_CONFIGURE(args):
     extra_conf.append("--disable-debug-gui")
     extra_conf.append("--disable-tests")
     extra_conf.append("--without-libunwind")
-    extra_conf.append('MTDEV_CFLAGS="-I' + ops.path_join(iopc.getSdkPath(), 'usr/include/mtdev') + '"')
-    extra_conf.append('MTDEV_LIBS="-L' + ops.path_join(iopc.getSdkPath(), 'lib') + ' -lmtdev"')
-    extra_conf.append('LIBUDEV_CFLAGS="-I' + ops.path_join(iopc.getSdkPath(), 'usr/include/libudev') + '"')
-    extra_conf.append('LIBUDEV_LIBS="-L' + ops.path_join(iopc.getSdkPath(), 'lib') + ' -ludev"')
-    extra_conf.append('LIBEVDEV_CFLAGS="-I' + ops.path_join(iopc.getSdkPath(), 'usr/include/libevdev') + '"')
-    extra_conf.append('LIBEVDEV_LIBS="-L' + ops.path_join(iopc.getSdkPath(), 'lib') + ' -levdev"')
-    extra_conf.append('CAIRO_CFLAGS="-I' + ops.path_join(iopc.getSdkPath(), 'usr/include/libcairo') + '"')
-    extra_conf.append('CAIRO_LIBS="-L' + ops.path_join(iopc.getSdkPath(), 'lib') + ' -lcairo"')
+    extra_conf.append('MTDEV_CFLAGS=' + cflags)
+    extra_conf.append('MTDEV_LIBS=' + libs)
+    extra_conf.append('LIBUDEV_CFLAGS=' + cflags)
+    extra_conf.append('LIBUDEV_LIBS=' + libs)
+    extra_conf.append('LIBEVDEV_CFLAGS=' + cflags)
+    extra_conf.append('LIBEVDEV_LIBS=' + libs)
+    extra_conf.append('CAIRO_CFLAGS=' + cflags)
+    extra_conf.append('CAIRO_LIBS=' + libs)
     iopc.configure(tarball_dir, extra_conf)
 
     return True
@@ -146,6 +137,19 @@ def MAIN_INSTALL(args):
     iopc.installBin(args["pkg_name"], ops.path_join(dst_bin_dir, "."), "bin")
     iopc.installBin(args["pkg_name"], ops.path_join(dst_usr_local_libexec_dir, "."), "usr/local/libexec")
     iopc.installBin(args["pkg_name"], ops.path_join(tmp_include_dir, "."), dst_include_dir)
+
+    return False
+
+def MAIN_SDKENV(args):
+    set_global(args)
+
+    cflags = ""
+    cflags += " -I" + ops.path_join(iopc.getSdkPath(), 'usr/include/' + args["pkg_name"])
+    iopc.add_includes(cflags)
+
+    libs = ""
+    libs += " -linput"
+    iopc.add_libs(libs)
 
     return False
 

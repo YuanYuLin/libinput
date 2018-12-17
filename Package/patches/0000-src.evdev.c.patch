@@ -1,40 +1,50 @@
 --- a/src/evdev.c	2017-06-26 17:25:16.000000000 +0800
-+++ b/src/evdev.c	2018-05-14 05:23:52.001981360 +0800
-@@ -98,8 +98,25 @@
++++ b/src/evdev.c	2018-10-30 23:15:40.285202686 +0800
+@@ -98,18 +98,32 @@
  		const char *property)
  {
  	const char *val;
-+	char *event_node;
- 
++	char *node_evt;
++	char *node_pty;
++	int idx = 0;
++	uint8_t *ptr = NULL;
++	uint8_t device_count = 0;
++	uint8_t dev_evt[30];
++	uint8_t dev_pty[30];
++	ptr = getenv("IOPC_INPUT_COUNT");
++	if(ptr) {
++		device_count = strtoul(ptr, NULL, 10);
++	}
 +	val = udev_device_get_sysname(udev_device);
-+	event_node = getenv("IOPC_INPUT_EVENT");
-+	if( (strcmp(event_node, val) == 0) && (strcmp("ID_INPUT_KEYBOARD", property) == 0) ) {
-+		return true;
++	for(idx=0;idx<device_count;idx++){
++		memset(&dev_evt[0], 0, 30);
++		memset(&dev_pty[0], 0, 30);
++
++		sprintf(dev_evt, "IOPC_INPUT_EVT%d", idx);
++		sprintf(dev_pty, "IOPC_INPUT_PTY%d", idx);
++		node_evt = getenv(dev_evt);
++		node_pty = getenv(dev_pty);
++		if( (strcmp(val, node_evt) == 0) && (strcmp(property, node_pty) == 0) ) {
++			//printf("%s-%s-%d, fg=[(%d)%s, (%d)%s], [(%d)%s, (%d)%s]\n", __FILE__, __func__, __LINE__, strlen(val), val, strlen(node_evt), node_evt, strlen(property), property, strlen(node_pty), node_pty);
++			return true;
++		}
 +	}
-+	if( (strcmp(event_node, val) == 0) && (strcmp("ID_INPUT_MOUSE", property) == 0) ) {
-+		return true;
-+	}
-+	if( (strcmp(event_node, val) == 0) && (strcmp("ID_INPUT", property) == 0) ) {
-+		return true;
-+	}
-+	if( (strcmp(event_node, val) == 0) && (strcmp("ID_INPUT_TOUCHSCREEN", property) == 0) ) {
-+		return true;
-+	}
-+/*
- 	val = udev_device_get_property_value(udev_device, property);
-+	//printf("%s-%s-%d, flag:%s, %s\n", __FILE__, __func__, __LINE__, val, property);
- 	if (!val)
- 		return false;
  
-@@ -110,6 +127,7 @@
- 				"property %s has invalid value '%s'\n",
- 				property,
- 				val);
-+*/
+-	val = udev_device_get_property_value(udev_device, property);
+-	if (!val)
+-		return false;
+-
+-	if (streq(val, "1"))
+-		return true;
+-	if (!streq(val, "0"))
+-		evdev_log_error(device,
+-				"property %s has invalid value '%s'\n",
+-				property,
+-				val);
  	return false;
  }
  
-@@ -2578,7 +2596,7 @@
+@@ -2578,7 +2592,7 @@
  	if ((udev_tags & EVDEV_UDEV_TAG_INPUT) == 0 ||
  	    (udev_tags & ~EVDEV_UDEV_TAG_INPUT) == 0) {
  		evdev_log_info(device,
